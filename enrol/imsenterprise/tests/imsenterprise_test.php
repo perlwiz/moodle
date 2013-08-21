@@ -429,7 +429,7 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
             foreach ($courses as $course) {
 
                 $xmlcontent .= '
-  <group'
+  <group';
 
                 // Optional recstatus (1=add, 2=update, 3=delete)
                 if (!empty($course->recstatus)) {
