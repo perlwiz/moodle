@@ -263,6 +263,8 @@ function process_group_tag($tagcontents) {
     $updatecourses          = $this->get_config('updatecourses');
     $createnewcategories    = $this->get_config('createnewcategories');
     $categoryseparator      = trim($this->get_config('categoryseparator'));
+    $courseattr_shortname   = $this->get_config('imscoursemapshortname');
+    $courseattr_fullname    = $this->get_config('imscoursemapfullname');
 
     // Ensure a default is set for the category separator
     if (empty($categoryseparator)) {
@@ -419,18 +421,24 @@ function process_group_tag($tagcontents) {
                     ($courseid = $DB->get_field('course', 'id', array('idnumber'=>$coursecode)))) {
                 if ($updatecourses) {
                     // Update course. Allowed fields to be updated are:
-                    // Full Name, Short Name, and Description.
-                    $did_update = 0;
-                    foreach (array('fullname', 'shortname', 'description') as $key) {
-                        $value = $DB->get_field('course', $key, array('idnumber'=>$coursecode));
-                        if ($value != $group->{$key}) {
-                            $DB->set_field('course', $key, $group->{$key}, array('idnumber'=>$coursecode));
-                            add_to_log(SITEID, "course", "update", "view.php?id=$courseid",
-                                "$group->description (ID $courseid)");
-                            $did_update = 1;
+                    // Short Name, and Full Name.
+                    $has_updates = 0;
+                    $dbcourse = $DB->get_record('course', array('id' => $courseid));
+                    if (!empty($group->short)) {
+                        if ($group->short != $dbcourse->shortname) {
+                            $dbcourse->shortname = $group->short;
+                            $has_updates = 1;
                         }
                     }
-                    if ($did_update) {
+                    if (!empty($group->full)) {
+                        if ($group->full != $dbcourse->fullname) {
+                            $dbcourse->fullname = $group->full;
+                            $has_updates = 1;
+                        }
+                    }
+                    if ($has_updates) {
+                        $DB->update_record('course', $dbcourse);
+                        add_to_log(SITEID, "course", "update", "view.php?id=$courseid","ID $courseid");
                         $this->log_line("Updated course $coursecode in Moodle (Moodle ID is $courseid)");
                     }
                 } else {
@@ -558,9 +566,11 @@ function process_person_tag($tagcontents){
 
             // If they don't exist and they have a defined username, and $createnewusers == true, we create them.
             $person->lang = $CFG->lang;
-            $auth = explode(',', $CFG->auth); //TODO: this needs more work due tu multiauth changes, use first auth for now
-            $auth = reset($auth);
-            $person->auth = $auth;
+            if (empty($person->auth)) {
+                $auth = explode(',', $CFG->auth); //TODO: this needs more work due tu multiauth changes, use first auth for now
+                $auth = reset($auth);
+                $person->auth = $auth;
+            }
             $person->confirmed = 1;
             $person->timemodified = time();
             $person->mnethostid = $CFG->mnet_localhost_id;

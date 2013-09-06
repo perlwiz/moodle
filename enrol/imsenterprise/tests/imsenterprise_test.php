@@ -126,7 +126,7 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
         $this->set_xml_file($users);
         $this->imsplugin->cron();
 
-        $dbuser = $DB->get_record('users', array('username' => $user2->username));
+        $dbuser = $DB->get_record('user', array('username' => $user2->username));
         // TODO: this needs more work due to multiauth changes, use first auth for now
         $dbauth = explode(',', $dbuser->auth);
         $dbauth = reset($dbauth);
@@ -308,6 +308,7 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
         $course4->recstatus = '1';
         $course4->idnumber = 'id4';
         $course4->imsshort = 'id4';
+        $course4->imsfull = 'id4';
         $course4->category = 'DEFAULT CATNAME';
 
         $this->set_xml_file(false, array($course4));
@@ -317,7 +318,6 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
 
         $course4u->recstatus = '2';
         $course4u->imsshort = 'description_short_updated';
-        $course4u->imslong = 'description_long_updated';
         $course4u->imsfull = 'description_full_updated';
 
         $this->set_xml_file(false, array($course4u));
@@ -326,8 +326,7 @@ class enrol_imsenterprise_testcase extends advanced_testcase {
         $dbcourse = $DB->get_record('course', array('idnumber' => $course4->idnumber));
         $this->assertFalse(!$dbcourse);
         $this->assertEquals($dbcourse->shortname, $course4u->imsshort);
-        $this->assertEquals($dbcourse->fullname, $course4u->imslong);
-        $this->assertEquals($dbcourse->summary, $course4u->imsfull);
+        $this->assertEquals($dbcourse->fullname, $course4u->imsfull);
     }
 
 
